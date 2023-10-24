@@ -77,7 +77,7 @@ void scale(const string &fileName, const string &newFileName, int factor, int of
     Header header;
     readHeader(readFile, header);
 
-    int size = header.width * header.bitsPerPixel/8 * header.height;
+    int size = header.width * header.bitsPerPixel / 8 * header.height;
 
     ofstream writeFile(newFileName, ios::binary);
     writeHeader(writeFile, header);
@@ -108,7 +108,7 @@ void add_flat(const string &fileName, const string &newFileName, int factor, int
     Header header;
     readHeader(readFile, header);
 
-    int size = header.width * header.bitsPerPixel/8 * header.height;
+    int size = header.width * header.bitsPerPixel / 8 * header.height;
 
     ofstream writeFile(newFileName, ios::binary);
     writeHeader(writeFile, header);
@@ -209,24 +209,24 @@ void overlay(const string &fileName1, const string &fileName2, const string &new
     for (int i = 0; i < size; i++)
     {
 
-            unsigned char byte1;
-            unsigned char byte2;
-            file1.read(reinterpret_cast<char *>(&byte1), sizeof(byte1));
-            file2.read(reinterpret_cast<char *>(&byte2), sizeof(byte2));
-            float norm1 = static_cast<int>(byte1) / 255.0;
-            float norm2 = static_cast<int>(byte2) / 255.0;
+        unsigned char byte1;
+        unsigned char byte2;
+        file1.read(reinterpret_cast<char *>(&byte1), sizeof(byte1));
+        file2.read(reinterpret_cast<char *>(&byte2), sizeof(byte2));
+        float norm1 = static_cast<int>(byte1) / 255.0;
+        float norm2 = static_cast<int>(byte2) / 255.0;
 
-            float newValue;
-            if (norm2 <= 0.5)
-            {
-                newValue = 2 * norm1 * norm2 * 255 + 0.5f;
-            }
-            else
-            {
-                newValue = (1 - 2 * (1 - norm1) * (1 - norm2)) * 255 + 0.5f;
-            }
-            unsigned char newByte = static_cast<unsigned char>(newValue);
-            newFile.write(reinterpret_cast<char *>(&newByte), sizeof(newByte));
+        float newValue;
+        if (norm2 <= 0.5)
+        {
+            newValue = 2 * norm1 * norm2 * 255 + 0.5f;
+        }
+        else
+        {
+            newValue = (1 - 2 * (1 - norm1) * (1 - norm2)) * 255 + 0.5f;
+        }
+        unsigned char newByte = static_cast<unsigned char>(newValue);
+        newFile.write(reinterpret_cast<char *>(&newByte), sizeof(newByte));
     }
     file1.close();
     file2.close();
@@ -245,7 +245,7 @@ void subtract(const string &fileName1, const string &fileName2, const string &ne
     readHeader(file2, header);
     writeHeader(newFile, header);
 
-    int size = header.width * header.bitsPerPixel/8 * header.height;
+    int size = header.width * header.bitsPerPixel / 8 * header.height;
 
     unsigned char byte1;
     unsigned char byte2;
@@ -309,14 +309,14 @@ void add(const string &fileName1, const string &fileName2, const string &newFile
     newFile.close();
 }
 
-void rotate(const string &fileName, const string &newFileName)
+void flip(const string &fileName, const string &newFileName)
 {
     ifstream readFile(fileName, ios::binary);
 
     Header header;
     readHeader(readFile, header);
 
-    int size = header.width * header.bitsPerPixel/8 * header.height;
+    int size = header.width * header.bitsPerPixel / 8 * header.height;
     unsigned char *bytes = new unsigned char[size];
 
     for (int i = 0; i < size; i++)
@@ -347,17 +347,18 @@ void load_channel(const string &fileName, const string &newFileName, int offset)
     Header header;
     readHeader(readFile, header);
 
-    int size = header.width * header.bitsPerPixel/8 * header.height;
+    int size = header.width * header.bitsPerPixel / 8 * header.height;
 
     ofstream writeFile(newFileName, ios::binary);
     writeHeader(writeFile, header);
     unsigned char currentByte;
     readFile.seekg(offset, ios::cur);
-    for (int i = offset; i < size; i+=3)
+    for (int i = offset; i < size; i += 3)
     {
         readFile.read(reinterpret_cast<char *>(&currentByte), sizeof(currentByte));
 
-        for(int j = 0; j < 3; j++) {
+        for (int j = 0; j < 3; j++)
+        {
             writeFile.write(reinterpret_cast<char *>(&currentByte), sizeof(currentByte));
         }
         readFile.seekg(2, ios::cur);
@@ -380,7 +381,7 @@ void combine_rgb(const string &redFileName, const string &greenFileName, const s
     ofstream newFile(newFileName, ios::binary);
     writeHeader(newFile, header);
 
-    int size = header.width * header.bitsPerPixel/8 * header.height;
+    int size = header.width * header.bitsPerPixel / 8 * header.height;
 
     unsigned char newByte;
     for (int i = 0; i < size; i++)
@@ -441,7 +442,8 @@ void print_diff(const string &file_id)
     cout << "Success!" << '\n';
 }
 
-void test() {
+void test()
+{
     multiply("input/layer1.tga", "input/pattern1.tga", "output/part1.tga");
 
     subtract("input/car.tga", "input/layer2.tga", "output/part2.tga");
@@ -468,11 +470,264 @@ void test() {
 
     combine_rgb("input/layer_red.tga", "input/layer_green.tga", "input/layer_blue.tga", "output/part9.tga");
 
-    rotate("input/text2.tga", "output/part10.tga");
+    flip("input/text2.tga", "output/part10.tga");
 }
 
-int main()
+bool ends_with_tga(const string &arg)
 {
-    test();
+    return arg.length() > 4 && arg.substr(arg.length() - 4) == ".tga";
+}
+
+bool is_valid_argument(const string &arg, const string &type)
+{
+    if (type == "int")
+    {
+        try
+        {
+            stoi(arg);
+            return true;
+        }
+        catch (const out_of_range &e)
+        {
+            return false;
+        }
+    }
+    else if (type == "file_path")
+    {
+        ifstream file(arg, ios::binary);
+        if (file.good() && ends_with_tga(arg))
+        {
+            return true;
+        }
+        else
+        {
+            cout << "Invalid argument, invalid file name.\n";
+            return false;
+        }
+    }
+    return false;
+}
+
+int main(int argc, char *argv[])
+{
+    if (argc == 1 || (argc == 2 && argv[1] == "--help"))
+    {
+        cout << "Project 2: Image Processing, Fall 2023"
+             << "\n\n";
+        cout << "Usage:\n\t ./project2.out [output] [firstImage] [method] [...]"
+             << "\n";
+    }
+    else
+    {
+        string outFileName = string(argv[1]);
+        if (ends_with_tga(outFileName))
+        {
+            string fileName1 = string(argv[2]);
+            int i = 3;
+            if (ends_with_tga(fileName1))
+            {
+                // Handle no method argument
+                if (argc == 3)
+                {
+                    cout << "Invalid method name.\n";
+                }
+
+                while (i < argc)
+                {
+                    ifstream inputFile1(fileName1, ios::binary);
+                    if (inputFile1.good())
+                    {
+                        inputFile1.close();
+                        string func = string(argv[i]);
+
+
+                        // Methods that take another file parameter
+
+                        if (func == "multiply")
+                        {
+                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "file_path"))
+                            {
+                                multiply(fileName1, string(argv[i + 1]), outFileName);
+                                i = i + 2;
+                            }
+                            else
+                            {
+                                cout << "Missing argument.\n";
+                            }
+                        }
+                        else if (func == "subtract")
+                        {
+                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "file_path"))
+                            {
+                                subtract(fileName1, string(argv[i + 1]), outFileName);
+                                i = i + 2;
+                            }
+                            else
+                            {
+                                cout << "Missing argument.\n";
+                            }
+                        }
+                        else if (func == "overlay")
+                        {
+                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "file_path"))
+                            {
+                                overlay(fileName1, string(argv[i + 1]), outFileName);
+                                i = i + 2;
+                            }
+                            else
+                            {
+                                cout << "Missing argument.\n";
+                            }
+                        }
+                        else if (func == "screen")
+                        {
+                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "file_path"))
+                            {
+                                screen(fileName1, string(argv[i + 1]), outFileName);
+                                i = i + 2;
+                            }
+                            else
+                            {
+                                cout << "Missing argument.\n";
+                            }
+                        }
+                        else if (func == "combine")
+                        {
+                            if (i + 2 < argc && is_valid_argument(string(argv[i + 1]), "file_path") && is_valid_argument(string(argv[i + 2]), "file_path"))
+                            {
+                                combine_rgb(outFileName, fileName1, string(argv[i + 1]), string(argv[6]));
+                                i = i + 3;
+                            }
+                            else
+                            {
+                                cout << "Missing argument.\n";
+                            }
+                        }
+
+
+                        //Methods that take an integer parameter
+
+                        else if (func == "addred")
+                        {
+                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "int"))
+                            {
+                                add_flat(fileName1, outFileName, stoi(argv[5]), 2);
+                                i = i + 2;
+                            }
+                            else
+                            {
+                                cout << "Missing argument.\n";
+                            }
+                        }
+                        else if (func == "addgreen")
+                        {
+                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "int"))
+                            {
+                                add_flat(fileName1, outFileName, stoi(argv[5]), 1);
+                                i = i + 2;
+                            }
+                            else
+                            {
+                                cout << "Missing argument.\n";
+                            }
+                        }
+                        else if (func == "addblue")
+                        {
+                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "int"))
+                            {
+                                add_flat(fileName1, outFileName, stoi(argv[5]), 0);
+                                i = i + 2;
+                            }
+                            else
+                            {
+                                cout << "Missing argument.\n";
+                            }
+                        }
+                        else if (func == "scalered")
+                        {
+                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "int"))
+                            {
+                                scale(fileName1, outFileName, stoi(argv[5]), 2);
+                                i = i + 2;
+                            }
+                            else
+                            {
+                                cout << "Missing argument.\n";
+                            }
+                        }
+                        else if (func == "scalegreen")
+                        {
+                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "int"))
+                            {
+                                scale(fileName1, outFileName, stoi(argv[5]), 1);
+                                i = i + 2;
+                            }
+                            else
+                            {
+                                cout << "Missing argument.\n";
+                            }
+                        }
+                        else if (func == "scaleblue")
+                        {
+                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "int"))
+                            {
+                                scale(fileName1, outFileName, stoi(argv[5]), 0);
+                                i = i + 2;
+                            }
+                            else
+                            {
+                                cout << "Missing argument.\n";
+                            }
+                        }
+
+
+                        //Methods that take no additional parameter
+
+                        else if (func == "flip")
+                        {
+                            flip(fileName1, outFileName);
+                            i++;
+                        }
+                        else if (func == "onlyred")
+                        {
+                            load_channel(fileName1, outFileName, 2);
+                            i++;
+                        }
+                        else if (func == "onlygreen")
+                        {
+                            load_channel(fileName1, outFileName, 1);
+                            i++;
+                        }
+                        else if (func == "onlyblue")
+                        {
+                            load_channel(fileName1, outFileName, 0);
+                            i++;
+                        }
+                        else
+                        {
+                            cout << "Invalid method name.\n";
+                            break;
+                        }
+
+                        fileName1 = outFileName;
+                    }
+                    else
+                    {
+                        inputFile1.close();
+                        cout << "File does not exist.\n";
+                    }
+                }
+            }
+            else
+            {
+                cout << "Invalid file name.\n";
+            }
+        }
+        else
+        {
+            cout << "Invalid file name.\n";
+        }
+    }
+
     return 0;
 }
