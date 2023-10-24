@@ -487,17 +487,26 @@ bool is_valid_argument(const string &arg, const string &type)
             stoi(arg);
             return true;
         }
-        catch (const out_of_range &e)
+        catch (const invalid_argument &e)
         {
+            cout << "Invalid argument, expected number.";
             return false;
         }
     }
     else if (type == "file_path")
     {
         ifstream file(arg, ios::binary);
-        if (file.good() && ends_with_tga(arg))
+        if (ends_with_tga(arg))
         {
-            return true;
+            if (file.good())
+            {
+                return true;
+            }
+            else
+            {
+                cout << "Invalid argument, file does not exist.\n";
+                return false;
+            }
         }
         else
         {
@@ -510,11 +519,11 @@ bool is_valid_argument(const string &arg, const string &type)
 
 int main(int argc, char *argv[])
 {
-    if (argc == 1 || (argc == 2 && argv[1] == "--help"))
+    if (argc == 1 || (argc == 2 && string(argv[1]) == "--help"))
     {
         cout << "Project 2: Image Processing, Fall 2023"
              << "\n\n";
-        cout << "Usage:\n\t ./project2.out [output] [firstImage] [method] [...]"
+        cout << "Usage:\n\t./project2.out [output] [firstImage] [method] [...]"
              << "\n";
     }
     else
@@ -527,195 +536,303 @@ int main(int argc, char *argv[])
             if (ends_with_tga(fileName1))
             {
                 // Handle no method argument
-                if (argc == 3)
+                ifstream inputFile1(fileName1, ios::binary);
+                bool fileExists = inputFile1.good();
+                inputFile1.close();
+                if (!fileExists)
+                {
+                    cout << "File does not exist.\n";
+                }
+                else if (argc == 3)
                 {
                     cout << "Invalid method name.\n";
                 }
-
-                while (i < argc)
+                else
                 {
-                    ifstream inputFile1(fileName1, ios::binary);
-                    if (inputFile1.good())
+                    string currentOutFileName;
+                    bool firstRun = true;
+                    while (i < argc)
                     {
-                        inputFile1.close();
-                        string func = string(argv[i]);
+                        currentOutFileName = "output/temp" + to_string(i) + ".tga";
+                        inputFile1.open(fileName1, ios::binary);
+                        if (inputFile1.good())
+                        {
+                            inputFile1.close();
+                            string func = string(argv[i]);
 
+                            // Methods that take another file parameter
 
-                        // Methods that take another file parameter
+                            if (func == "multiply")
+                            {
+                                if (i + 1 < argc)
+                                {
+                                    if (is_valid_argument(string(argv[i + 1]), "file_path"))
+                                    {
+                                        multiply(fileName1, string(argv[i + 1]), currentOutFileName);
+                                        i = i + 2;
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    cout << "Missing argument.\n";
+                                    break;
+                                }
+                            }
+                            else if (func == "subtract")
+                            {
+                                if (i + 1 < argc)
+                                {
+                                    if (is_valid_argument(string(argv[i + 1]), "file_path"))
+                                    {
+                                        subtract(fileName1, string(argv[i + 1]), currentOutFileName);
+                                        i = i + 2;
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    cout << "Missing argument.\n";
+                                    break;
+                                }
+                            }
+                            else if (func == "overlay")
+                            {
+                                if (i + 1 < argc)
+                                {
+                                    if (is_valid_argument(string(argv[i + 1]), "file_path"))
+                                    {
+                                        overlay(fileName1, string(argv[i + 1]), currentOutFileName);
+                                        i = i + 2;
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    cout << "Missing argument.\n";
+                                    break;
+                                }
+                            }
+                            else if (func == "screen")
+                            {
+                                if (i + 1 < argc)
+                                {
+                                    if (is_valid_argument(string(argv[i + 1]), "file_path"))
+                                    {
+                                        screen(fileName1, string(argv[i + 1]), currentOutFileName);
+                                        i = i + 2;
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    cout << "Missing argument.\n";
+                                    break;
+                                }
+                            }
+                            else if (func == "combine")
+                            {
+                                if (i + 2 < argc)
+                                {
+                                    if (is_valid_argument(string(argv[i + 1]), "file_path") && is_valid_argument(string(argv[i + 2]), "file_path"))
+                                    {
+                                        combine_rgb(fileName1, string(argv[i + 1]), string(argv[i + 2]), currentOutFileName);
+                                        i = i + 3;
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    cout << "Missing argument.\n";
+                                    break;
+                                }
+                            }
 
-                        if (func == "multiply")
-                        {
-                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "file_path"))
-                            {
-                                multiply(fileName1, string(argv[i + 1]), outFileName);
-                                i = i + 2;
-                            }
-                            else
-                            {
-                                cout << "Missing argument.\n";
-                            }
-                        }
-                        else if (func == "subtract")
-                        {
-                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "file_path"))
-                            {
-                                subtract(fileName1, string(argv[i + 1]), outFileName);
-                                i = i + 2;
-                            }
-                            else
-                            {
-                                cout << "Missing argument.\n";
-                            }
-                        }
-                        else if (func == "overlay")
-                        {
-                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "file_path"))
-                            {
-                                overlay(fileName1, string(argv[i + 1]), outFileName);
-                                i = i + 2;
-                            }
-                            else
-                            {
-                                cout << "Missing argument.\n";
-                            }
-                        }
-                        else if (func == "screen")
-                        {
-                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "file_path"))
-                            {
-                                screen(fileName1, string(argv[i + 1]), outFileName);
-                                i = i + 2;
-                            }
-                            else
-                            {
-                                cout << "Missing argument.\n";
-                            }
-                        }
-                        else if (func == "combine")
-                        {
-                            if (i + 2 < argc && is_valid_argument(string(argv[i + 1]), "file_path") && is_valid_argument(string(argv[i + 2]), "file_path"))
-                            {
-                                combine_rgb(outFileName, fileName1, string(argv[i + 1]), string(argv[6]));
-                                i = i + 3;
-                            }
-                            else
-                            {
-                                cout << "Missing argument.\n";
-                            }
-                        }
+                            // Methods that take an integer parameter
 
+                            else if (func == "addred")
+                            {
+                                if (i + 1 < argc)
+                                {
+                                    if (is_valid_argument(string(argv[i + 1]), "int"))
+                                    {
+                                        add_flat(fileName1, currentOutFileName, stoi(argv[i + 1]), 2);
+                                        i = i + 2;
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    cout << "Missing argument.\n";
+                                    break;
+                                }
+                            }
+                            else if (func == "addgreen")
+                            {
+                                if (i + 1 < argc)
+                                {
+                                    if (is_valid_argument(string(argv[i + 1]), "int"))
+                                    {
+                                        add_flat(fileName1, currentOutFileName, stoi(argv[i + 1]), 1);
+                                        i = i + 2;
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    cout << "Missing argument.\n";
+                                    break;
+                                }
+                            }
+                            else if (func == "addblue")
+                            {
+                                if (i + 1 < argc)
+                                {
+                                    if (is_valid_argument(string(argv[i + 1]), "int"))
+                                    {
+                                        add_flat(fileName1, currentOutFileName, stoi(argv[i + 1]), 0);
+                                        i = i + 2;
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    cout << "Missing argument.\n";
+                                    break;
+                                }
+                            }
+                            else if (func == "scalered")
+                            {
+                                if (i + 1 < argc)
+                                {
+                                    if (is_valid_argument(string(argv[i + 1]), "int"))
+                                    {
+                                        scale(fileName1, currentOutFileName, stoi(argv[i + 1]), 2);
+                                        i = i + 2;
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    cout << "Missing argument.\n";
+                                    break;
+                                }
+                            }
+                            else if (func == "scalegreen")
+                            {
+                                if (i + 1 < argc)
+                                {
+                                    if (is_valid_argument(string(argv[i + 1]), "int"))
+                                    {
+                                        scale(fileName1, currentOutFileName, stoi(argv[i + 1]), 1);
+                                        i = i + 2;
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    cout << "Missing argument.\n";
+                                    break;
+                                }
+                            }
+                            else if (func == "scaleblue")
+                            {
+                                if (i + 1 < argc)
+                                {
+                                    if (is_valid_argument(string(argv[i + 1]), "int"))
+                                    {
+                                        scale(fileName1, currentOutFileName, stoi(argv[i + 1]), 0);
+                                        i = i + 2;
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    cout << "Missing argument.\n";
+                                    break;
+                                }
+                            }
 
-                        //Methods that take an integer parameter
+                            // Methods that take no additional parameter
 
-                        else if (func == "addred")
-                        {
-                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "int"))
+                            else if (func == "flip")
                             {
-                                add_flat(fileName1, outFileName, stoi(argv[5]), 2);
-                                i = i + 2;
+                                flip(fileName1, currentOutFileName);
+                                i++;
+                            }
+                            else if (func == "onlyred")
+                            {
+                                load_channel(fileName1, currentOutFileName, 2);
+                                i++;
+                            }
+                            else if (func == "onlygreen")
+                            {
+                                load_channel(fileName1, currentOutFileName, 1);
+                                i++;
+                            }
+                            else if (func == "onlyblue")
+                            {
+                                load_channel(fileName1, currentOutFileName, 0);
+                                i++;
                             }
                             else
                             {
-                                cout << "Missing argument.\n";
+                                cout << "Invalid method name.\n";
+                                break;
                             }
-                        }
-                        else if (func == "addgreen")
-                        {
-                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "int"))
-                            {
-                                add_flat(fileName1, outFileName, stoi(argv[5]), 1);
-                                i = i + 2;
-                            }
-                            else
-                            {
-                                cout << "Missing argument.\n";
-                            }
-                        }
-                        else if (func == "addblue")
-                        {
-                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "int"))
-                            {
-                                add_flat(fileName1, outFileName, stoi(argv[5]), 0);
-                                i = i + 2;
-                            }
-                            else
-                            {
-                                cout << "Missing argument.\n";
-                            }
-                        }
-                        else if (func == "scalered")
-                        {
-                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "int"))
-                            {
-                                scale(fileName1, outFileName, stoi(argv[5]), 2);
-                                i = i + 2;
-                            }
-                            else
-                            {
-                                cout << "Missing argument.\n";
-                            }
-                        }
-                        else if (func == "scalegreen")
-                        {
-                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "int"))
-                            {
-                                scale(fileName1, outFileName, stoi(argv[5]), 1);
-                                i = i + 2;
-                            }
-                            else
-                            {
-                                cout << "Missing argument.\n";
-                            }
-                        }
-                        else if (func == "scaleblue")
-                        {
-                            if (i + 1 < argc && is_valid_argument(string(argv[i + 1]), "int"))
-                            {
-                                scale(fileName1, outFileName, stoi(argv[5]), 0);
-                                i = i + 2;
-                            }
-                            else
-                            {
-                                cout << "Missing argument.\n";
-                            }
-                        }
 
-
-                        //Methods that take no additional parameter
-
-                        else if (func == "flip")
-                        {
-                            flip(fileName1, outFileName);
-                            i++;
-                        }
-                        else if (func == "onlyred")
-                        {
-                            load_channel(fileName1, outFileName, 2);
-                            i++;
-                        }
-                        else if (func == "onlygreen")
-                        {
-                            load_channel(fileName1, outFileName, 1);
-                            i++;
-                        }
-                        else if (func == "onlyblue")
-                        {
-                            load_channel(fileName1, outFileName, 0);
-                            i++;
+                            if (firstRun)
+                            {
+                                firstRun = false;
+                            }
+                            else
+                            {
+                                remove(fileName1.c_str());
+                            }
+                            fileName1 = currentOutFileName;
                         }
                         else
                         {
-                            cout << "Invalid method name.\n";
+                            inputFile1.close();
+                            cout << "File does not exist.\n";
                             break;
                         }
-
-                        fileName1 = outFileName;
                     }
-                    else
-                    {
-                        inputFile1.close();
-                        cout << "File does not exist.\n";
-                    }
+                    remove(outFileName.c_str());
+                    rename(currentOutFileName.c_str(), outFileName.c_str());
                 }
             }
             else
