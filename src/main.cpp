@@ -120,6 +120,7 @@ void add_flat(const string &fileName, const string &newFileName, int factor, int
         {
             int newValue = static_cast<int>(currentByte) + factor;
             newValue = (newValue > 255) ? 255 : newValue;
+            newValue = (newValue < 0) ? 0 : newValue;
             unsigned char newByte = static_cast<unsigned char>(newValue);
             writeFile.write(reinterpret_cast<char *>(&newByte), sizeof(newByte));
         }
